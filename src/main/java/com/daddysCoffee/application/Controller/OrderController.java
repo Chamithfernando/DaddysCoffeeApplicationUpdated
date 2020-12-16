@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -52,5 +54,33 @@ public class OrderController {
         Orders newOrder = orderRepository.save(orders);
         return ResponseEntity
                 .created(new URI("order/add"+ newOrder.getOrderId())).body(newOrder);
+    }
+
+    //Updating existing Order
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Orders> updateOrders(@PathVariable(value = "id") int orderId ,
+                                                    @Validated @RequestBody Orders orders) throws ResourceNotFoundException {
+        Orders result = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found for this id :: " + orderId));
+
+        result.setOrderId(orders.getOrderId());
+        result.setOrderDate(orders.getOrderDate());
+        result.setOrderQuantity(orders.getOrderQuantity());
+        final Orders updatedOrders = orderRepository.save(result);
+        return ResponseEntity.ok(updatedOrders);
+    }
+
+
+    // Deleting existing Order
+    @DeleteMapping("/delete/{id}")
+    public Map<String, Boolean> deleteOrders(@PathVariable(value = "id") int orderId)
+            throws ResourceNotFoundException {
+        Orders result = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found for this id :: " + orderId));
+
+        orderRepository.delete(result);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("deleted", Boolean.TRUE);
+        return response;
     }
 }
